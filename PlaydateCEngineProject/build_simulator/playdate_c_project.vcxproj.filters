@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\micha\Documents\Champlain\GPR_460\Final\PlaydateProject_GPR460_Final\PlaydateCEngineProject\src\main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\micha\Documents\Champlain\GPR_460\Final\PlaydateProject_GPR460_Final\PlaydateCEngineProject\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{E73FD2A8-5242-3501-85F2-B7478020CF5B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
