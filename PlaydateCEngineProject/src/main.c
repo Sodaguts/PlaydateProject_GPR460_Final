@@ -45,6 +45,7 @@ int x = (400-TEXT_WIDTH)/2;
 int y = (240-TEXT_HEIGHT)/2;
 int dx = 1;
 int dy = 2;
+int bDrawEllipse = 0;
 
 static int update(void* userdata)
 {
@@ -53,6 +54,25 @@ static int update(void* userdata)
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
 	pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
+
+	pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
+	//pd->graphics->drawEllipse(100,200,50,50,10,0,360,kColorBlack);
+
+	PDButtons current;
+	pd->system->getButtonState(&current, NULL, NULL);
+	if (current & kButtonA) 
+	{
+		bDrawEllipse = 1;
+	}
+	if (current & kButtonB) 
+	{
+		bDrawEllipse = 0;
+	}
+
+	if (bDrawEllipse == 1) 
+	{
+		pd->graphics->drawEllipse(100, 50, 25, 25, 5, 0, 360, kColorBlack);
+	}
 
 	x += dx;
 	y += dy;
@@ -65,6 +85,11 @@ static int update(void* userdata)
         
 	pd->system->drawFPS(0,0);
 
+	return 1;
+}
+
+static int getInput(void* userdata) 
+{
 	return 1;
 }
 
