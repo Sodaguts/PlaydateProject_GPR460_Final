@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <stdbool.h>
+
 #include "pd_api.h"
 
 static int update(void* userdata);
@@ -20,12 +22,17 @@ LCDFont* font = NULL;
 __declspec(dllexport)
 #endif
 
+#define MAX_GAMEOBJECTS 3
+
 struct GameObject 
 {
 	//maintains its own position
 	float x;
 	float y;
+	bool isActive;
 }gameObject;
+
+struct GameObject gameObjectWorld[MAX_GAMEOBJECTS];
 
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 {
@@ -38,6 +45,16 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 		
 		if ( font == NULL )
 			pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
+
+		// create max gameobjects
+
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++)
+		{
+			int randX = rand() % (200 - 10 + 1) + 10;
+			int randY = rand() % (60 - 10 + 1) + 10;
+			struct GameObject go = { randX,randY,true };
+			gameObjectWorld[i] = go;
+		}
 
 		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
 		pd->system->setUpdateCallback(update, pd);
@@ -59,7 +76,6 @@ int bDrawEllipse = 0;
 static int update(void* userdata)
 {
 	PlaydateAPI* pd = userdata;
-	struct GameObject go = {200,60};
 	
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
@@ -72,16 +88,40 @@ static int update(void* userdata)
 	pd->system->getButtonState(&current, NULL, NULL);
 	if (current & kButtonA) 
 	{
-		bDrawEllipse = 1;
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
+		{
+			if (gameObjectWorld[i].isActive == false)
+			{
+				gameObjectWorld[i].isActive = true;
+				break;
+			}
+		}
 	}
 	if (current & kButtonB) 
 	{
-		bDrawEllipse = 0;
+		//bDrawEllipse = 0;
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
+		{
+			if (gameObjectWorld[i].isActive == true)
+			{
+				gameObjectWorld[i].isActive = false;
+				break;
+			}
+		}
 	}
 
-	if (bDrawEllipse == 1) 
+	/*if (bDrawEllipse == 1) 
 	{
 		pd->graphics->drawEllipse(go.x, go.y, 25, 25, 5, 0, 360, kColorBlack);
+	}*/
+	for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
+	{
+		if (gameObjectWorld[i].isActive == true)
+		{
+			int posX = gameObjectWorld[i].x;
+			int posY = gameObjectWorld[i].y;
+			pd->graphics->drawEllipse(posX,posY,25,25,5,0,360,kColorBlack);
+		}
 	}
 
 	x += dx;
