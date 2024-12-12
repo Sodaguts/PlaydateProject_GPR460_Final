@@ -33,7 +33,6 @@ struct GameObject
 }gameObject;
 
 struct GameObject gameObjectWorld[MAX_GAMEOBJECTS];
-int activeObjects = 0;
 
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 {
@@ -89,24 +88,17 @@ static int update(void* userdata)
 	pd->system->getButtonState(NULL, &current, NULL);
 	if (current & kButtonA) 
 	{
-		if (activeObjects < 3) 
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
 		{
-			activeObjects++;
-		}
-		else 
-		{
-			activeObjects = 0;
-		}
-
-
-		if (gameObjectWorld[activeObjects].isActive == false)
-		{
-			gameObjectWorld[activeObjects].isActive = true;
+			if (gameObjectWorld[i].isActive == false)
+			{
+				gameObjectWorld[i].isActive = true;
+				break;
+			}
 		}
 	}
 	if (current & kButtonB) 
 	{
-		//bDrawEllipse = 0;
 		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
 		{
 			if (gameObjectWorld[i].isActive == true)
