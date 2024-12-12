@@ -5,6 +5,7 @@
 //  Created by Dave Hayden on 7/30/14.
 //  Copyright (c) 2014 Panic, Inc. All rights reserved.
 //
+//  playdate_c_project Created by Celica Lysik on 12/10/2024
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,14 @@ LCDFont* font = NULL;
 #ifdef _WINDLL
 __declspec(dllexport)
 #endif
+
+struct GameObject 
+{
+	//maintains its own position
+	float x;
+	float y;
+}gameObject;
+
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 {
 	(void)arg; // arg is currently only used for event = kEventKeyPressed
@@ -50,6 +59,7 @@ int bDrawEllipse = 0;
 static int update(void* userdata)
 {
 	PlaydateAPI* pd = userdata;
+	struct GameObject go = {200,60};
 	
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
@@ -71,7 +81,7 @@ static int update(void* userdata)
 
 	if (bDrawEllipse == 1) 
 	{
-		pd->graphics->drawEllipse(100, 50, 25, 25, 5, 0, 360, kColorBlack);
+		pd->graphics->drawEllipse(go.x, go.y, 25, 25, 5, 0, 360, kColorBlack);
 	}
 
 	x += dx;
