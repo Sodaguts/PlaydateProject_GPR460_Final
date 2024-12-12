@@ -20,6 +20,7 @@ CMakeFiles\playdate_c_project_DEVICE.dir\src\main.c.obj: \
  C:/PlaydateDependencies/arm_toolchain/arm-none-eabi/include/stdlib.h \
  C:/PlaydateDependencies/arm_toolchain/arm-none-eabi/include/machine/stdlib.h \
  C:/PlaydateDependencies/arm_toolchain/arm-none-eabi/include/alloca.h \
+ C:/PlaydateDependencies/arm_toolchain/lib/gcc/arm-none-eabi/14.2.1/include/stdbool.h \
  C:\PlaydateDependencies\playdate_sdk\PlaydateSDK\C_API/pd_api.h \
  C:/PlaydateDependencies/arm_toolchain/lib/gcc/arm-none-eabi/14.2.1/include/stdint.h \
  C:/PlaydateDependencies/arm_toolchain/arm-none-eabi/include/stdint.h \
