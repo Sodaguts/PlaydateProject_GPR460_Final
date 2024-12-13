@@ -24,17 +24,15 @@ __declspec(dllexport)
 
 #define MAX_GAMEOBJECTS 10
 #define MAX_RENDERERS 10
+#define MAX_RESIZERS 5
 
 
 
-struct PlayerMovementComponent 
-{
-	float dX;
-	float dY;
-	//find a way to make this have a point
-};
 
-//RENDER COMPONENT
+/// <summary>
+/// Renderer component determines whether or not
+/// the object it is attached to is rendered.
+/// </summary>
 struct RendererComponent 
 {
 	int posX;
@@ -65,6 +63,33 @@ void go_deactivateRendererAt(int index)
 	rendererWorld[index].isActive = false;
 }
 
+/// <summary>
+/// Resize component resizes object (renderer)
+/// by size based on the turn angle of the crank
+/// </summary>
+struct ResizeComponent 
+{
+	float size;
+	bool isActive;
+};
+struct ResizeComponent resizerWorld[MAX_RESIZERS];
+struct ResizeComponent go_createResizeComponent(float size) 
+{
+	for (int i = 0; i < MAX_RESIZERS; i++) 
+	{
+		if (resizerWorld[i].isActive == false)
+		{
+			struct ResizeComponent rc = { size, true };
+			resizerWorld[i] = rc;
+			return rc;
+		}
+	}
+}
+void go_deactivateResizerAt(int index) 
+{
+	resizerWorld[index].isActive = false;
+}
+
 struct GameObject
 {
 	//maintains its own position
@@ -72,7 +97,8 @@ struct GameObject
 	float y;
 	bool isActive;
 	struct RendererComponent renderer;
-}gameObject;
+	struct ResizeComponent resizer;
+};
 
 struct GameObject gameObjectWorld[MAX_GAMEOBJECTS];
 
@@ -89,13 +115,14 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 			pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
 
 		// create max gameobjects
-
+		//setup
 		for (int i = 0; i < MAX_GAMEOBJECTS; i++)
 		{
 			int randX = rand() % (200 - 10 + 1) + 10;
 			int randY = rand() % (60 - 10 + 1) + 10;
 			struct GameObject go = { randX,randY,true };
 			go.renderer = go_createRenderer(randX, randY, 25,25,5,0,360,kColorBlack);
+			go.resizer = go_createResizeComponent(5);
 			gameObjectWorld[i] = go;
 		}
 		
@@ -126,6 +153,9 @@ static int update(void* userdata)
 	pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
 
 	pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
+
+	//crank input
+	float crankAngle = pd->system->getCrankAngle();
 
 	PDButtons current;
 	pd->system->getButtonState(NULL, &current, NULL);
@@ -168,7 +198,24 @@ static int update(void* userdata)
 		}
 	}
 
-	// render any active renderers
+	for (int i = 0; i < MAX_RESIZERS; i++)
+	{
+		if (resizerWorld[i].isActive == true)
+		{
+			resizerWorld[i].size = crankAngle;
+			if (rendererWorld[i].isActive == true)
+			{
+				rendererWorld[i].width = crankAngle;
+				rendererWorld[i].height = crankAngle;
+			}
+		}
+	}
+
+
+	
+
+	// render 
+
 	for (int i = 0; i < MAX_RENDERERS; i++) 
 	{
 		if (rendererWorld[i].isActive == true)
