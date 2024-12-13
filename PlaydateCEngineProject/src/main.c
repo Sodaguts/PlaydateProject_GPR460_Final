@@ -22,14 +22,56 @@ LCDFont* font = NULL;
 __declspec(dllexport)
 #endif
 
-#define MAX_GAMEOBJECTS 3
+#define MAX_GAMEOBJECTS 10
+#define MAX_RENDERERS 10
 
-struct GameObject 
+
+
+struct PlayerMovementComponent 
+{
+	float dX;
+	float dY;
+	//find a way to make this have a point
+};
+
+//RENDER COMPONENT
+struct RendererComponent 
+{
+	int posX;
+	int posY;
+	int width;
+	int height;
+	int lineWidth;
+	float startAngle;
+	float endAngle;
+	LCDColor color;
+	bool isActive;
+};
+struct RendererComponent rendererWorld[MAX_RENDERERS];
+struct RendererComponent go_createRenderer(int posX, int posY, int width, int height, int lineWidth, float startAngle, float endAngle, LCDColor color) 
+{
+	for (int i = 0; i < MAX_RENDERERS; i++) 
+	{
+		if (rendererWorld[i].isActive == false)
+		{
+			struct RendererComponent rc = { posX, posY, width, height, lineWidth, startAngle, endAngle, color, true};
+			rendererWorld[i] = rc;
+			return rc;
+		}
+	}
+}
+void go_deactivateRendererAt(int index) 
+{
+	rendererWorld[index].isActive = false;
+}
+
+struct GameObject
 {
 	//maintains its own position
 	float x;
 	float y;
 	bool isActive;
+	struct RendererComponent renderer;
 }gameObject;
 
 struct GameObject gameObjectWorld[MAX_GAMEOBJECTS];
@@ -53,8 +95,10 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 			int randX = rand() % (200 - 10 + 1) + 10;
 			int randY = rand() % (60 - 10 + 1) + 10;
 			struct GameObject go = { randX,randY,true };
+			go.renderer = go_createRenderer(randX, randY, 25,25,5,0,360,kColorBlack);
 			gameObjectWorld[i] = go;
 		}
+		
 
 		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
 		pd->system->setUpdateCallback(update, pd);
@@ -82,10 +126,10 @@ static int update(void* userdata)
 	pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
 
 	pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
-	//pd->graphics->drawEllipse(100,200,50,50,10,0,360,kColorBlack);
 
 	PDButtons current;
 	pd->system->getButtonState(NULL, &current, NULL);
+
 	if (current & kButtonA) 
 	{
 		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
@@ -93,12 +137,27 @@ static int update(void* userdata)
 			if (gameObjectWorld[i].isActive == false)
 			{
 				gameObjectWorld[i].isActive = true;
+				int randX = rand() % (200 - 10 + 1) + 10;
+				int randY = rand() % (60 - 10 + 1) + 10;
+				gameObjectWorld[i].x = randX;
+				gameObjectWorld[i].y = randY;
+				gameObjectWorld[i].renderer = go_createRenderer(randX, randY, 25,25,5,0,360,kColorBlack);
 				break;
 			}
 		}
 	}
 	if (current & kButtonB) 
 	{
+		//deactivate components first
+		for (int i = 0; i < MAX_RENDERERS; i++) 
+		{
+			if (rendererWorld[i].isActive == true)
+			{
+				go_deactivateRendererAt(i);
+				break;
+			}
+		}
+
 		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
 		{
 			if (gameObjectWorld[i].isActive == true)
@@ -109,17 +168,14 @@ static int update(void* userdata)
 		}
 	}
 
-	/*if (bDrawEllipse == 1) 
+	// render any active renderers
+	for (int i = 0; i < MAX_RENDERERS; i++) 
 	{
-		pd->graphics->drawEllipse(go.x, go.y, 25, 25, 5, 0, 360, kColorBlack);
-	}*/
-	for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
-	{
-		if (gameObjectWorld[i].isActive == true)
+		if (rendererWorld[i].isActive == true)
 		{
-			int posX = gameObjectWorld[i].x;
-			int posY = gameObjectWorld[i].y;
-			pd->graphics->drawEllipse(posX,posY,25,25,5,0,360,kColorBlack);
+			pd->graphics->drawEllipse(rendererWorld[i].posX, rendererWorld[i].posY, rendererWorld[i].width,
+									  rendererWorld[i].height, rendererWorld[i].lineWidth, rendererWorld[i].startAngle,
+									  rendererWorld[i].endAngle, rendererWorld[i].color);
 		}
 	}
 
