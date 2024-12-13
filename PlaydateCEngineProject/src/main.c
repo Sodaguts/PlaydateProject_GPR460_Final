@@ -25,6 +25,7 @@ __declspec(dllexport)
 #define MAX_GAMEOBJECTS 10
 #define MAX_RENDERERS 10
 #define MAX_RESIZERS 5
+#define MAX_CONTROLLERS 3
 
 
 
@@ -46,7 +47,7 @@ struct RendererComponent
 	bool isActive;
 };
 struct RendererComponent rendererWorld[MAX_RENDERERS];
-struct RendererComponent go_createRenderer(int posX, int posY, int width, int height, int lineWidth, float startAngle, float endAngle, LCDColor color) 
+struct RendererComponent* go_createRenderer(int posX, int posY, int width, int height, int lineWidth, float startAngle, float endAngle, LCDColor color) 
 {
 	for (int i = 0; i < MAX_RENDERERS; i++) 
 	{
@@ -54,7 +55,7 @@ struct RendererComponent go_createRenderer(int posX, int posY, int width, int he
 		{
 			struct RendererComponent rc = { posX, posY, width, height, lineWidth, startAngle, endAngle, color, true};
 			rendererWorld[i] = rc;
-			return rc;
+			return &rc;
 		}
 	}
 }
@@ -73,7 +74,7 @@ struct ResizeComponent
 	bool isActive;
 };
 struct ResizeComponent resizerWorld[MAX_RESIZERS];
-struct ResizeComponent go_createResizeComponent(float size) 
+struct ResizeComponent* go_createResizeComponent(float size) 
 {
 	for (int i = 0; i < MAX_RESIZERS; i++) 
 	{
@@ -81,7 +82,7 @@ struct ResizeComponent go_createResizeComponent(float size)
 		{
 			struct ResizeComponent rc = { size, true };
 			resizerWorld[i] = rc;
-			return rc;
+			return &rc;
 		}
 	}
 }
@@ -90,17 +91,91 @@ void go_deactivateResizerAt(int index)
 	resizerWorld[index].isActive = false;
 }
 
+/// <summary>
+/// player controller component, determines whether or not
+/// the objects in the scene are moveable.
+/// </summary>
+struct PlayerController 
+{
+	int dx;
+	int dy;
+	bool isActive;
+};
+struct PlayerController playerControllerWorld[MAX_CONTROLLERS];
+struct PlayerController* go_createController(int i_dx, int i_dy) 
+{
+	for (int i = 0; i < MAX_CONTROLLERS; i++) 
+	{
+		if (playerControllerWorld[i].isActive == false)
+		{
+			struct PlayerController pc = {i_dx,i_dy,true};
+			playerControllerWorld[i] = pc;
+			return &pc;
+		}
+	}
+}
+void go_deactivateControllerAt(int index) 
+{
+	playerControllerWorld[index].isActive = false;
+}
+
 struct GameObject
 {
 	//maintains its own position
 	float x;
 	float y;
 	bool isActive;
-	struct RendererComponent renderer;
-	struct ResizeComponent resizer;
+	struct RendererComponent* renderer;
+	struct ResizeComponent* resizer;
+	struct PlayerController* controller;
 };
-
 struct GameObject gameObjectWorld[MAX_GAMEOBJECTS];
+
+void updateController(int addSubX, int addSubY)
+{
+	for (int i = 0; i < MAX_CONTROLLERS; i++)
+	{
+		if (playerControllerWorld[i].isActive == true)
+		{
+			if (addSubX > 0) 
+			{
+				rendererWorld[i].posX += playerControllerWorld[i].dx;
+			}
+			else if (addSubX < 0) {
+				rendererWorld[i].posX -= playerControllerWorld[i].dx;
+			}
+
+			if (addSubY > 0) 
+			{
+				rendererWorld[i].posY += playerControllerWorld[i].dy;
+			}
+			else if (addSubY < 0) {
+				rendererWorld[i].posY -= playerControllerWorld[i].dy;
+			}
+		}
+	}
+}
+
+//setup stuff
+void setup(PlaydateAPI* pd)
+{
+	const char* err;
+	font = pd->graphics->loadFont(fontpath, &err);
+
+	if (font == NULL)
+		pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
+
+	for (int i = 0; i < MAX_GAMEOBJECTS; i++)
+	{
+		int randX = rand() % (200 - 10 + 1) + 10;
+		int randY = rand() % (60 - 10 + 1) + 10;
+		struct GameObject go = { randX,randY,true };
+		go.renderer = go_createRenderer(randX, randY, 25, 25, 5, 0, 360, kColorBlack);
+		go.resizer = go_createResizeComponent(5);
+		go.controller = go_createController(3,3);
+		gameObjectWorld[i] = go;
+	}
+}
 
 int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 {
@@ -108,23 +183,9 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 
 	if ( event == kEventInit )
 	{
-		const char* err;
-		font = pd->graphics->loadFont(fontpath, &err);
 		
-		if ( font == NULL )
-			pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
-
-		// create max gameobjects
 		//setup
-		for (int i = 0; i < MAX_GAMEOBJECTS; i++)
-		{
-			int randX = rand() % (200 - 10 + 1) + 10;
-			int randY = rand() % (60 - 10 + 1) + 10;
-			struct GameObject go = { randX,randY,true };
-			go.renderer = go_createRenderer(randX, randY, 25,25,5,0,360,kColorBlack);
-			go.resizer = go_createResizeComponent(5);
-			gameObjectWorld[i] = go;
-		}
+		setup(pd);
 		
 
 		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
@@ -179,6 +240,15 @@ static int update(void* userdata)
 	if (current & kButtonB) 
 	{
 		//deactivate components first
+		for (int i = 0; i < MAX_RESIZERS; i++) 
+		{
+			if (resizerWorld[i].isActive == true)
+			{
+				go_deactivateResizerAt(i);
+				break;
+			}
+		}
+
 		for (int i = 0; i < MAX_RENDERERS; i++) 
 		{
 			if (rendererWorld[i].isActive == true)
@@ -198,6 +268,25 @@ static int update(void* userdata)
 		}
 	}
 
+	PDButtons dpad;
+	pd->system->getButtonState(&dpad,NULL,NULL);
+	if (dpad & kButtonUp) 
+	{
+		updateController(0,-1);
+	}
+	if (dpad & kButtonDown) 
+	{
+		updateController(0,1);
+	}
+	if (dpad & kButtonRight) 
+	{
+		updateController(1,0);
+	}
+	if (dpad & kButtonLeft) 
+	{
+		updateController(-1,0);
+	}
+
 	for (int i = 0; i < MAX_RESIZERS; i++)
 	{
 		if (resizerWorld[i].isActive == true)
@@ -211,8 +300,6 @@ static int update(void* userdata)
 		}
 	}
 
-
-	
 
 	// render 
 
@@ -244,4 +331,6 @@ static int getInput(void* userdata)
 {
 	return 1;
 }
+
+
 
