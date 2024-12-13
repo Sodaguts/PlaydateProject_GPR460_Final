@@ -27,7 +27,7 @@ __declspec(dllexport)
 #define MAX_RESIZERS 5
 #define MAX_CONTROLLERS 3
 
-
+void getInput(PlaydateAPI* playdate);
 
 
 /// <summary>
@@ -168,7 +168,7 @@ void setup(PlaydateAPI* pd)
 	for (int i = 0; i < MAX_GAMEOBJECTS; i++)
 	{
 		int randX = rand() % (200 - 10 + 1) + 10;
-		int randY = rand() % (60 - 10 + 1) + 10;
+		int randY = rand() % (200 - 10 + 1) + 10;
 		struct GameObject go = { randX,randY,true };
 		go.renderer = go_createRenderer(randX, randY, 25, 25, 5, 0, 360, kColorBlack);
 		go.resizer = go_createResizeComponent(5);
@@ -211,19 +211,49 @@ static int update(void* userdata)
 	
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
-	pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
+	//pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
 
-	pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
+	//pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
 
+	//handle input logic
+	getInput(pd);
+
+	// render 
+	for (int i = 0; i < MAX_RENDERERS; i++) 
+	{
+		if (rendererWorld[i].isActive == true)
+		{
+			pd->graphics->drawEllipse(rendererWorld[i].posX, rendererWorld[i].posY, rendererWorld[i].width,
+									  rendererWorld[i].height, rendererWorld[i].lineWidth, rendererWorld[i].startAngle,
+									  rendererWorld[i].endAngle, rendererWorld[i].color);
+		}
+	}
+
+	/*x += dx;
+	y += dy;
+	
+	if ( x < 0 || x > LCD_COLUMNS - TEXT_WIDTH )
+		dx = -dx;
+	
+	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
+		dy = -dy;*/
+        
+	pd->system->drawFPS(0,0);
+
+	return 1;
+}
+
+void getInput(PlaydateAPI* pd) 
+{
 	//crank input
 	float crankAngle = pd->system->getCrankAngle();
 
 	PDButtons current;
 	pd->system->getButtonState(NULL, &current, NULL);
 
-	if (current & kButtonA) 
+	if (current & kButtonA)
 	{
-		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++)
 		{
 			if (gameObjectWorld[i].isActive == false)
 			{
@@ -232,15 +262,17 @@ static int update(void* userdata)
 				int randY = rand() % (60 - 10 + 1) + 10;
 				gameObjectWorld[i].x = randX;
 				gameObjectWorld[i].y = randY;
-				gameObjectWorld[i].renderer = go_createRenderer(randX, randY, 25,25,5,0,360,kColorBlack);
+				gameObjectWorld[i].renderer = go_createRenderer(randX, randY, 25, 25, 5, 0, 360, kColorBlack);
+				gameObjectWorld[i].resizer = go_createResizeComponent(5);
+				gameObjectWorld[i].controller = go_createController(3,3);
 				break;
 			}
 		}
 	}
-	if (current & kButtonB) 
+	if (current & kButtonB)
 	{
 		//deactivate components first
-		for (int i = 0; i < MAX_RESIZERS; i++) 
+		for (int i = 0; i < MAX_RESIZERS; i++)
 		{
 			if (resizerWorld[i].isActive == true)
 			{
@@ -249,7 +281,7 @@ static int update(void* userdata)
 			}
 		}
 
-		for (int i = 0; i < MAX_RENDERERS; i++) 
+		for (int i = 0; i < MAX_RENDERERS; i++)
 		{
 			if (rendererWorld[i].isActive == true)
 			{
@@ -258,7 +290,7 @@ static int update(void* userdata)
 			}
 		}
 
-		for (int i = 0; i < MAX_GAMEOBJECTS; i++) 
+		for (int i = 0; i < MAX_GAMEOBJECTS; i++)
 		{
 			if (gameObjectWorld[i].isActive == true)
 			{
@@ -269,22 +301,22 @@ static int update(void* userdata)
 	}
 
 	PDButtons dpad;
-	pd->system->getButtonState(&dpad,NULL,NULL);
-	if (dpad & kButtonUp) 
+	pd->system->getButtonState(&dpad, NULL, NULL);
+	if (dpad & kButtonUp)
 	{
-		updateController(0,-1);
+		updateController(0, -1);
 	}
-	if (dpad & kButtonDown) 
+	if (dpad & kButtonDown)
 	{
-		updateController(0,1);
+		updateController(0, 1);
 	}
-	if (dpad & kButtonRight) 
+	if (dpad & kButtonRight)
 	{
-		updateController(1,0);
+		updateController(1, 0);
 	}
-	if (dpad & kButtonLeft) 
+	if (dpad & kButtonLeft)
 	{
-		updateController(-1,0);
+		updateController(-1, 0);
 	}
 
 	for (int i = 0; i < MAX_RESIZERS; i++)
@@ -299,37 +331,6 @@ static int update(void* userdata)
 			}
 		}
 	}
-
-
-	// render 
-
-	for (int i = 0; i < MAX_RENDERERS; i++) 
-	{
-		if (rendererWorld[i].isActive == true)
-		{
-			pd->graphics->drawEllipse(rendererWorld[i].posX, rendererWorld[i].posY, rendererWorld[i].width,
-									  rendererWorld[i].height, rendererWorld[i].lineWidth, rendererWorld[i].startAngle,
-									  rendererWorld[i].endAngle, rendererWorld[i].color);
-		}
-	}
-
-	x += dx;
-	y += dy;
-	
-	if ( x < 0 || x > LCD_COLUMNS - TEXT_WIDTH )
-		dx = -dx;
-	
-	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
-		dy = -dy;
-        
-	pd->system->drawFPS(0,0);
-
-	return 1;
-}
-
-static int getInput(void* userdata) 
-{
-	return 1;
 }
 
 
