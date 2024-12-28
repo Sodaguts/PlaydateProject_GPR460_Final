@@ -29,6 +29,12 @@ __declspec(dllexport)
 
 void getInput(PlaydateAPI* playdate);
 
+enum ComponentType {
+	PLAYER_CONTROLLER,
+	RENDERER,
+	RESIZER
+};
+
 
 /// <summary>
 /// Renderer component determines whether or not
@@ -102,6 +108,7 @@ struct PlayerController
 	bool isActive;
 };
 struct PlayerController playerControllerWorld[MAX_CONTROLLERS];
+int controllerTracker = 0;
 struct PlayerController* go_createController(int i_dx, int i_dy) 
 {
 	for (int i = 0; i < MAX_CONTROLLERS; i++) 
@@ -110,6 +117,7 @@ struct PlayerController* go_createController(int i_dx, int i_dy)
 		{
 			struct PlayerController pc = {i_dx,i_dy,true};
 			playerControllerWorld[i] = pc;
+			controllerTracker++;
 			return &pc;
 		}
 	}
@@ -117,6 +125,7 @@ struct PlayerController* go_createController(int i_dx, int i_dy)
 void go_deactivateControllerAt(int index) 
 {
 	playerControllerWorld[index].isActive = false;
+	controllerTracker--;
 }
 
 struct GameObject
@@ -154,6 +163,36 @@ void updateController(int addSubX, int addSubY)
 			}
 		}
 	}
+}
+
+void deactivateComponentofType(enum ComponentType type) 
+{
+	auto componentPool;
+	int size = 0;
+	switch (type) 
+	{
+		case PLAYER_CONTROLLER:
+			componentPool = playerControllerWorld;
+			size = MAX_CONTROLLERS;
+			break;
+		case RENDERER:
+			componentPool = rendererWorld;
+			size = MAX_RENDERERS;
+			break;
+		case RESIZER:
+			componentPool = resizerWorld;
+			size = MAX_RESIZERS;
+			break;
+	}
+
+	/*for (int i = 0; i < size; i++)
+	{
+		if (resizerWorld[i].isActive == true)
+		{
+			go_deactivateResizerAt(i); // for this to work we'd probably need a generic function to auto deactivate too or just move deactivation code here too???
+			break;
+		}
+	}*/
 }
 
 //setup stuff
@@ -208,12 +247,20 @@ int bDrawEllipse = 0;
 static int update(void* userdata)
 {
 	PlaydateAPI* pd = userdata;
+
+	//update array sizes
+	int currentPlayerControllers = sizeof(playerControllerWorld) / sizeof(playerControllerWorld[0]);
 	
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
 	//pd->graphics->drawText("Goodbye World!", strlen("Goodbye World!"), kASCIIEncoding, x, y);
 
 	//pd->graphics->drawText("Here is some example text", strlen("Here is some example text"), kASCIIEncoding, 100, 100);
+	char str_currentPlayerControllers[4];
+	sprintf(str_currentPlayerControllers, "%d", controllerTracker);
+
+	pd->graphics->drawText("PlayerControllers: ", strlen("PlayerControllers: "), kASCIIEncoding, 100, 100); // figure out a way to print the num of current x controllers/components
+	pd->graphics->drawText(str_currentPlayerControllers, strlen(str_currentPlayerControllers), kASCIIEncoding, 300, 100);
 
 	//handle input logic
 	getInput(pd);
@@ -237,6 +284,7 @@ static int update(void* userdata)
 	
 	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
 		dy = -dy;*/
+	
         
 	pd->system->drawFPS(0,0);
 
@@ -272,6 +320,16 @@ void getInput(PlaydateAPI* pd)
 	if (current & kButtonB)
 	{
 		//deactivate components first
+
+		for (int i = 0; i < MAX_CONTROLLERS; i++) 
+		{
+			if (playerControllerWorld[i].isActive == true) 
+			{
+				go_deactivateControllerAt(i);
+				break;
+			}
+		}
+
 		for (int i = 0; i < MAX_RESIZERS; i++)
 		{
 			if (resizerWorld[i].isActive == true)
