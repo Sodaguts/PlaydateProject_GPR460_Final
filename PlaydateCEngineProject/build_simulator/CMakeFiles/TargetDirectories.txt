@@ -1,3 +1,0 @@
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_simulator/CMakeFiles/playdate_c_project.dir
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_simulator/CMakeFiles/ALL_BUILD.dir
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_simulator/CMakeFiles/ZERO_CHECK.dir
