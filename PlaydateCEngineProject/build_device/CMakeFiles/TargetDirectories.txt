@@ -1,3 +1,0 @@
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_device/CMakeFiles/playdate_c_project_DEVICE.dir
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_device/CMakeFiles/edit_cache.dir
-C:/Users/micha/Documents/Champlain/GPR_460/Final/PlaydateProject_GPR460_Final/PlaydateCEngineProject/build_device/CMakeFiles/rebuild_cache.dir
