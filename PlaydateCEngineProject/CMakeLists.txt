@@ -30,10 +30,18 @@ set(PLAYDATE_GAME_DEVICE playdate_c_project_DEVICE)
 
 project(${PLAYDATE_GAME_NAME} C ASM)
 
+file (GLOB SOURCES
+	"src/*.c"
+)
+
+file (GLOB HEADERS
+	"src/*.h"
+)
+
 if (TOOLCHAIN STREQUAL "armgcc")
-	add_executable(${PLAYDATE_GAME_DEVICE} src/main.c)
+	add_executable(${PLAYDATE_GAME_DEVICE} ${SOURCES})
 else()
-	add_library(${PLAYDATE_GAME_NAME} SHARED src/main.c )
+	add_library(${PLAYDATE_GAME_NAME} SHARED ${SOURCES} ${HEADERS})
 endif()
 
 include(${SDK}/C_API/buildsupport/playdate_game.cmake)

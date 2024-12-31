@@ -12,7 +12,8 @@
 
 #include <stdbool.h>
 
-#include "pd_api.h"
+//#include "pd_api.h"
+#include "ImageManager.h"
 
 static int update(void* userdata);
 const char* fontpath = "/System/Fonts/Asheville-Sans-14-Bold.pft";
@@ -250,6 +251,10 @@ static int update(void* userdata)
 
 	//update array sizes
 	int currentPlayerControllers = sizeof(playerControllerWorld) / sizeof(playerControllerWorld[0]);
+
+	/*int numTest = returnOne();
+	char str_numTest[5];
+	sprintf(str_numTest, "%d", numTest);*/ // method for obtaining a string for text drawing
 	
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
@@ -259,7 +264,11 @@ static int update(void* userdata)
 	char str_currentPlayerControllers[4];
 	sprintf(str_currentPlayerControllers, "%d", controllerTracker);
 
-	pd->graphics->drawText("PlayerControllers: ", strlen("PlayerControllers: "), kASCIIEncoding, 100, 100); // figure out a way to print the num of current x controllers/components
+	//pd->graphics->drawText(str_numTest, strlen(str_numTest), kASCIIEncoding, 50,50);
+
+	pd->graphics->drawText("PlayerController: ", strlen("PlayerControllers: "), kASCIIEncoding, 100, 100);
+	char testText[] = "hello";
+	displayText(pd, testText, 50, 50);
 	pd->graphics->drawText(str_currentPlayerControllers, strlen(str_currentPlayerControllers), kASCIIEncoding, 300, 100);
 
 	//handle input logic
@@ -284,7 +293,6 @@ static int update(void* userdata)
 	
 	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
 		dy = -dy;*/
-	
         
 	pd->system->drawFPS(0,0);
 
